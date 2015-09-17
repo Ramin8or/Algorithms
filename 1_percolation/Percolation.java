@@ -1,4 +1,12 @@
 
+/*
+ * Course: Princeton Algorithms Part 1
+ * Project: Week 1 programming assignment: Percolation
+ * Information: http://coursera.cs.princeton.edu/algs4/assignments/percolation.html 
+ * compile: javac-algs4 Percolation.java PercolationVisualizer.java PercolationStats.java 
+ * Test with PercolationVisualizer and data file: java-algs4  PercolationVisualizer input20.txt 
+ * Test with PercolationStats: java-algs4 PercolationStats 200 10
+ */
 import edu.princeton.cs.algs4.WeightedQuickUnionUF;
 
 public class Percolation {
@@ -40,20 +48,24 @@ public class Percolation {
             // Site is at top row, connect to top
             uf.union(site, vTop);
             uf4Full.union(site, vTop);
-        }
-        if (i == sizeN) {
-            // Site is at bottom row, do not use uf4Full
+        } 
+        else if (i == sizeN) {
+            // Site is at bottom row, do not use uf4Full to prevent "backwash"
             uf.union(site, vBottom);
-        }
-        if (i > 1 && isOpen(i-1, j)) {
-            // Connect to neighbor above
-            uf.union(site, site - sizeN);
-            uf4Full.union(site, site - sizeN);
-        }
-        if (i < sizeN && isOpen(i+1, j)) {
-            // Connect to neighbor below 
-            uf.union(site, site + sizeN);
-            uf4Full.union(site, site + sizeN);
+        } 
+        else { // i > 1 or i < sizeN 
+            if (isOpen(i-1, j)) {
+                // Connect to neighbor above
+                int siteAbove = xyTo1D(i-1, j);
+                uf.union(site, siteAbove);
+                uf4Full.union(site, siteAbove);
+            }
+            if (isOpen(i+1, j)) {
+                // Connect to neighbor below 
+                int siteBelow = xyTo1D(i+1, j);
+                uf.union(site, siteBelow);
+                uf4Full.union(site, siteBelow);
+            }
         }
         if (j > 1 && isOpen(i, j-1)) {
             // Connect to neighbor to the left

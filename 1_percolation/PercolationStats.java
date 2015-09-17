@@ -1,3 +1,11 @@
+/*
+ * Course: Princeton Algorithms Part 1
+ * Project: Week 1 programming assignment: PercolationStats
+ * Information: http://coursera.cs.princeton.edu/algs4/assignments/percolation.html 
+ * compile: javac-algs4 Percolation.java PercolationVisualizer.java PercolationStats.java 
+ * Test with PercolationVisualizer and data file: java-algs4  PercolationVisualizer input20.txt 
+ * Test with PercolationStats: java-algs4 PercolationStats 200 10
+ */
 import edu.princeton.cs.algs4.StdRandom;
 import edu.princeton.cs.algs4.StdStats;
 import edu.princeton.cs.algs4.StdOut;
