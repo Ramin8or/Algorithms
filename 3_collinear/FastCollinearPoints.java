@@ -22,6 +22,7 @@
 
 import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.HashSet;
 import edu.princeton.cs.algs4.StdDraw;
 import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.In;
@@ -29,6 +30,8 @@ import edu.princeton.cs.algs4.In;
 public class FastCollinearPoints {
     // List of segments of collinear points
     private ArrayList<LineSegment> segmentList;
+    // Hashset to prevent duplicate LineSegments
+    private HashSet<String> segmentHash;
 
     // finds all line segments containing 4 or more points
     public FastCollinearPoints(Point[] points)    
@@ -36,8 +39,11 @@ public class FastCollinearPoints {
         if (points == null)
             throw new java.lang.NullPointerException(
                 "Null argument passed to constructor!");
-        // Create the list of segments
+        // Instantiate the list of segments
         segmentList = new ArrayList<LineSegment>();
+        // Instantiate the hash set for segments
+        segmentHash = new HashSet<String>();
+
         // Copy the points array to preserve it
         Point[] pArray = new Point[points.length];
         System.arraycopy(points, 0, pArray, 0, points.length);
@@ -86,17 +92,36 @@ public class FastCollinearPoints {
     }
     private void addSegment(Point[] points, Point origin, int from, int to)
     {
-        // Sort points and pick first and last points to form a segment
+        // Sort the collinear points, such that later we can add a single
+        // segment from first point to last 
         int size = to - from + 1; // Add room for origin point too
-        Point[] segPoints = new Point[size]; 
+        Point[] segPoints = new Point[size];
         segPoints[0] = origin;
         int start = from;
         for (int i = 1; i < size; i++) {
             segPoints[i] = points[start++];
         }
         Arrays.sort(segPoints);
-        LineSegment segment = new LineSegment(segPoints[0], segPoints[segPoints.length - 1]); 
-        segmentList.add(segment);
+        // Create the maximal line segment
+        LineSegment segment = new LineSegment(segPoints[0], 
+                                    segPoints[segPoints.length - 1]);
+        // Add segment only if it's not in the hash set
+        if (!segmentHash.contains(segment.toString())) {
+            segmentHash.add(segment.toString());
+            segmentList.add(segment);
+        } 
+        // Create a line segment array. Store all sub-segments in this array.
+        // Each sub-segment will be added to the segment hash set so it would
+        // not be added back to the list of segments in the future
+        LineSegment[] segArray = new LineSegment[size-1]; 
+        for (int i = 1; i < size; i++) {
+            segArray[i-1] = new LineSegment(segPoints[0], segPoints[i]);
+        }
+        for (LineSegment lineSeg : segArray) {
+            if (!segmentHash.contains(lineSeg.toString())) {
+                segmentHash.add(lineSeg.toString());
+            } 
+        }
     }
     // the number of line segments
     public           int numberOfSegments()        
