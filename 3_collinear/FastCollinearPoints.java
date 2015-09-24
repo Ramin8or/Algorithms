@@ -62,9 +62,6 @@ public class FastCollinearPoints {
                 if (count >= 3) {
                     addSegment(pArray, origin, startIndex, index);
                 }
-                else {
-                    index = startIndex + 1;
-                }
             }
         }
     }
