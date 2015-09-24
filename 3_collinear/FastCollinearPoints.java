@@ -22,7 +22,7 @@
 
 import java.util.Arrays;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Hashtable;
 import edu.princeton.cs.algs4.StdDraw;
 import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.In;
@@ -30,8 +30,8 @@ import edu.princeton.cs.algs4.In;
 public class FastCollinearPoints {
     // List of segments of collinear points
     private ArrayList<LineSegment> segmentList;
-    // Hashset to prevent duplicate LineSegments
-    private HashSet<String> segmentHash;
+    // Hashtable to prevent duplicate segments in segmentList
+    private Hashtable<Double, ArrayList<Point>> slopeTable;
 
     // finds all line segments containing 4 or more points
     public FastCollinearPoints(Point[] points)    
@@ -41,8 +41,8 @@ public class FastCollinearPoints {
                 "Null argument passed to constructor!");
         // Instantiate the list of segments
         segmentList = new ArrayList<LineSegment>();
-        // Instantiate the hash set for segments
-        segmentHash = new HashSet<String>();
+        // Instantiate the hashtable for points
+        slopeTable = new Hashtable<Double, ArrayList<Point>>();
 
         // Copy the points array to preserve it
         Point[] pArray = new Point[points.length];
@@ -66,7 +66,7 @@ public class FastCollinearPoints {
                 }   
                 int count = index - startIndex;
                 if (count >= 3) {
-                    addSegment(pArray, origin, startIndex, index);
+                    addSegment(pArray, slope, origin, startIndex, index);
                 }
             }
         }
@@ -90,7 +90,7 @@ public class FastCollinearPoints {
             throw new java.lang.IllegalArgumentException(
                 "Slope indicates repeated point was passed in!");
     }
-    private void addSegment(Point[] points, Point origin, int from, int to)
+    private void addSegment(Point[] points, double slope, Point origin, int from, int to)
     {
         // Sort the collinear points, such that later we can add a single
         // segment from first point to last 
@@ -105,22 +105,32 @@ public class FastCollinearPoints {
         // Create the maximal line segment
         LineSegment segment = new LineSegment(segPoints[0], 
                                     segPoints[segPoints.length - 1]);
-        // Add segment only if it's not in the hash set
-        if (!segmentHash.contains(segment.toString())) {
-            segmentHash.add(segment.toString());
+        // Determine if the segment is already in segment list, if not add it
+        if (!slopeTable.containsKey(slope)) {
+            // Segment is not there add it
             segmentList.add(segment);
-        } 
-        // Create a line segment array. Store all sub-segments in this array.
-        // Each sub-segment will be added to the segment hash set so it would
-        // not be added back to the list of segments in the future
-        LineSegment[] segArray = new LineSegment[size-1]; 
-        for (int i = 1; i < size; i++) {
-            segArray[i-1] = new LineSegment(segPoints[0], segPoints[i]);
+            // Create list of points and add to hashtable
+            ArrayList<Point> alist = new ArrayList<Point>();
+            for (Point p : segPoints) {
+                if (!alist.contains(p)) {
+                    alist.add(p);
+                }
+            }
+            slopeTable.put(slope, alist);
         }
-        for (LineSegment lineSeg : segArray) {
-            if (!segmentHash.contains(lineSeg.toString())) {
-                segmentHash.add(lineSeg.toString());
-            } 
+        else {
+            boolean doAddPoint = false;
+            ArrayList<Point> alist = slopeTable.get(slope);
+            if (alist != null) {
+                for (Point p : segPoints) {
+                    if (!alist.contains(p)) {
+                        alist.add(p);
+                        doAddPoint = true;
+                    }
+                }
+            }
+            if (doAddPoint)
+                segmentList.add(segment);
         }
     }
     // the number of line segments
