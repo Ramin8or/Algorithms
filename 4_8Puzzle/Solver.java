@@ -10,11 +10,14 @@
 
 import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.MinPQ;
+import edu.princeton.cs.algs4.Stack;
+import java.util.Iterator;
 
 public class Solver {
     private MinPQ<Node> pq; 
     private MinPQ<Node> pqTwin; 
     private Node solutionNode;
+    private int minMoves;
     // find a solution to the initial board (using the A* algorithm)
     public Solver(Board initial) {
         if (initial == null)
@@ -35,25 +38,38 @@ public class Solver {
         // neighboring search nodes. 
         // Repeat this procedure until the search node dequeued is a goal.
         solutionNode = null;
+        minMoves = -1;
         int count = 0;
         while (true) {
+            // Dump the pq
+            /*
+            StdOut.println("Step:\t" + count);
             Node previousNode = pq.delMin();
             Node prevTwinNode = pqTwin.delMin();
-            
-            //StdOut.println(previousNode.getBoard());
+            StdOut.println("Dequeued: ");
+            StdOut.println(previousNode);
+            StdOut.println("=========");
 
+            Iterator itr = pq.iterator();
+            while (itr.hasNext()) {
+                Object element = itr.next();
+                StdOut.println((Node) element);
+            }            
+            */
+
+            Node previousNode = pq.delMin();
+            Node prevTwinNode = pqTwin.delMin();
             if (previousNode.getBoard().isGoal()) {
-                StdOut.println("Solved after " + count + " moves!");
+                //StdOut.println("Solved after " + count + " moves!");
                 solutionNode = previousNode;
                 return;
             }
             if (prevTwinNode.getBoard().isGoal()) {
-                StdOut.println("Cannot solve it, but twin was solved after " + count + " moves!");
+                //StdOut.println("Cannot solve it, but twin was solved after " + count + " moves!");
                 return;
             }
 
             count++;
-            StdOut.println(count + ": " + prevTwinNode.manhattan);
             Board prevBoard = null;
             Board prevTwinBoard = null;
             if (previousNode.previous != null) {
@@ -64,6 +80,14 @@ public class Solver {
             }
 
             for (Board b : previousNode.getBoard().neighbors()) {
+                /*
+                if (b.isGoal()) {
+                    StdOut.println("GOAL WAS ENQUEUED AT STEP: " + count);
+                    StdOut.println(b);
+                    StdOut.println(previousNode);
+                    StdOut.println("--------------------------");
+                }
+                */
                 if (!b.equals(prevBoard)) {
                     Node node = new Node(b, count, previousNode);
                     pq.insert(node);
@@ -83,11 +107,28 @@ public class Solver {
     }   
     // min number of moves to solve initial board; -1 if unsolvable   
     public int moves() {
-        return (solutionNode.moves); // TODO
+        if (solutionNode == null)
+            return -1;
+        if (minMoves != -1)
+            return minMoves;
+        for (Board b : solution()) {
+            minMoves++;
+        }
+        // minMoves starts at -1 to exclude initial board
+        return minMoves;
     }
     // sequence of boards in a shortest solution; null if unsolvable
     public Iterable<Board> solution() { //TODO
-        return null;
+        // Create a Stack and fill it with neighboring boards
+        Stack<Board> stack = new Stack<Board>();
+        Node solution = solutionNode;
+        while (solution != null) {
+            Board b = solution.getBoard();
+            if (b != null)
+                stack.push(b);
+            solution = solution.previous;
+        }
+        return stack;
     }
 
     private class Node implements Comparable<Node> {
@@ -105,6 +146,7 @@ public class Solver {
             previous = prev;
         }
         public int compareTo(Node that) {
+            /*
             if ((this.moves+this.manhattan) < (that.moves+that.manhattan)) 
                 return -1;
             else if ((this.moves+this.manhattan) > (that.moves+that.manhattan)) 
@@ -116,9 +158,30 @@ public class Solver {
                     return 1;
                 else return 0;
             }
+            */
+            if ((this.moves+this.hamming) < (that.moves+that.hamming)) 
+                return -1;
+            else if ((this.moves+this.hamming) > (that.moves+that.hamming)) 
+                return 1;
+            else {
+                if (this.manhattan < that.manhattan)
+                    return -1;
+                else if (this.manhattan > that.manhattan)
+                    return 1;
+                else return 0;
+            }
         }
         public Board getBoard() {
             return this.board;
+        }
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            sb.append("priority\t= " + (moves+manhattan) + "\n");
+            sb.append("moves\t\t= "    +  moves + "\n");
+            sb.append("manhattan\t= "+  manhattan + "\n");
+            sb.append("hamming\t= "+  hamming + "\n");
+            sb.append(this.board.toString());
+            return sb.toString();
         }
     }
 
@@ -142,10 +205,8 @@ public class Solver {
             StdOut.println("No solution possible");
         else {
             StdOut.println("Minimum number of moves = " + solver.moves());
-            /* TODO
             for (Board board : solver.solution())
                 StdOut.println(board);
-            */
         }
     }
 }
