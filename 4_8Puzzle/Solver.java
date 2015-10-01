@@ -14,8 +14,12 @@ import edu.princeton.cs.algs4.MinPQ;
 public class Solver {
     private MinPQ<Node> pq; 
     private MinPQ<Node> pqTwin; 
+    private Node solutionNode;
     // find a solution to the initial board (using the A* algorithm)
     public Solver(Board initial) {
+        if (initial == null)
+            throw new java.lang.NullPointerException(
+                "Null array passed to Solver constructor!");
         // Initialize the priority queue for initial board
         pq = new MinPQ<Node>();
         Node initialNode = new Node(initial, 0, null);
@@ -30,6 +34,7 @@ public class Solver {
         // minimum priority, and insert onto the priority queue all 
         // neighboring search nodes. 
         // Repeat this procedure until the search node dequeued is a goal.
+        solutionNode = null;
         int count = 0;
         while (true) {
             Node previousNode = pq.delMin();
@@ -39,41 +44,57 @@ public class Solver {
 
             if (previousNode.getBoard().isGoal()) {
                 StdOut.println("Solved after " + count + " moves!");
+                solutionNode = previousNode;
                 return;
             }
             if (prevTwinNode.getBoard().isGoal()) {
                 StdOut.println("Cannot solve it, but twin was solved after " + count + " moves!");
+                return;
             }
 
             count++;
+            StdOut.println(count + ": " + prevTwinNode.manhattan);
+            Board prevBoard = null;
+            Board prevTwinBoard = null;
+            if (previousNode.previous != null) {
+                prevBoard = previousNode.previous.getBoard();
+            }
+            if (prevTwinNode.previous != null) {
+                prevTwinBoard = prevTwinNode.previous.getBoard();
+            }
+
             for (Board b : previousNode.getBoard().neighbors()) {
-                Node node = new Node(b, count, previousNode);
-                pq.insert(node);
+                if (!b.equals(prevBoard)) {
+                    Node node = new Node(b, count, previousNode);
+                    pq.insert(node);
+                }
             }            
             for (Board b : prevTwinNode.getBoard().neighbors()) {
-                Node node = new Node(b, count, prevTwinNode);
-                pqTwin.insert(node);
+                if (!b.equals(prevTwinBoard)) {
+                    Node node = new Node(b, count, prevTwinNode);
+                    pqTwin.insert(node);
+                }
             }            
         }
     }
     // is the initial board solvable?
     public boolean isSolvable() {
-        return false;
+        return (solutionNode != null);
     }   
     // min number of moves to solve initial board; -1 if unsolvable   
     public int moves() {
-        return -1;
+        return (solutionNode.moves); // TODO
     }
     // sequence of boards in a shortest solution; null if unsolvable
-    public Iterable<Board> solution() {
+    public Iterable<Board> solution() { //TODO
         return null;
     }
 
     private class Node implements Comparable<Node> {
         private final Board board;
-        private int moves;
+        public final int moves;
         private Node previous;
-        private final int manhattan;
+        public final int manhattan;
         private final int hamming;
 
         public Node(Board b, int m, Node prev) {
@@ -121,8 +142,10 @@ public class Solver {
             StdOut.println("No solution possible");
         else {
             StdOut.println("Minimum number of moves = " + solver.moves());
+            /* TODO
             for (Board board : solver.solution())
                 StdOut.println(board);
+            */
         }
     }
 }

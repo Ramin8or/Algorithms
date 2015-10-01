@@ -16,8 +16,8 @@ import java.util.Queue;
 import java.util.LinkedList;
 
 public class Board {
-    // internal representation of a Board in a 1d array of chars
-    private char[] board;
+    // internal representation of a Board in a 1d array of bytes
+    private byte[] board;
     // dimension N of the 2D Board
     private int N;
     // construct a board from an N-by-N array of blocks
@@ -28,17 +28,17 @@ public class Board {
         // Get the N of 2d array and fill up the internal board
         N = blocks.length;
         assert (N == blocks[0].length);
-        this.board = new char[N*N];
+        this.board = new byte[N*N];
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
-                this.board[i*N + j] = (char) blocks[i][j];
+                this.board[i*N + j] = (byte) blocks[i][j];
             }
         }
     }
-    // Private constructor, takes array of chars and size
-    private Board(char[] blocks, int size2D) {
+    // Private constructor, takes array of bytes and size
+    private Board(byte[] blocks, int size2D) {
         N = size2D;
-        this.board = new char[N*N];
+        this.board = new byte[N*N];
         for (int i = 0; i < N*N; i++)
             this.board[i] = blocks[i];
     }
@@ -66,7 +66,7 @@ public class Board {
         }
         return sum;
     }
-    private int manhattanDist(int index, char actualValue) {
+    private int manhattanDist(int index, byte actualValue) {
         // For each block at index i, goal value of board[i] is i+1
         // Get goal Row and Column 
         assert (actualValue != 0);
@@ -79,7 +79,7 @@ public class Board {
     }
     // is this board the goal board? 
     public boolean isGoal() {
-        for (char i = 0; i < N*N - 1; i++) {
+        for (byte i = 0; i < N*N - 1; i++) {
             if (board[i] != (i + 1))
                 return false;
         }
@@ -88,6 +88,7 @@ public class Board {
     }       
     // a board that is obtained by exchanging any pair of blocks
     public Board twin() { 
+        /*
         int randomIndex = 0;
         int neighborIndex = -1;
         while (neighborIndex == -1) {
@@ -108,15 +109,14 @@ public class Board {
         assert (neighborIndex != -1 && this.board[neighborIndex] != 0);
         assert (this.board[randomIndex] != 0);
         return createNeighbor(randomIndex, neighborIndex);
-        /*
+        */
         int rand1 = 0;
         int rand2 = 0;
-        while (rand1 != rand2 && board[rand1] != 0 && board[rand2] != 0) {
+        while (rand1 == rand2 || board[rand1] == 0 || board[rand2] == 0) {
             rand1 = StdRandom.uniform(N*N);
             rand2 = StdRandom.uniform(N*N);
         }
         return createNeighbor(rand1, rand2);
-        */
     }
     // does this board equal y?
     public boolean equals(Object y) {
@@ -152,17 +152,14 @@ public class Board {
     // string representation of this board
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(N);
-        sb.append("\n");
+        sb.append(N + "\n");
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
-                sb.append(" ");
-                sb.append((int) board[i*N + j]); 
-                sb.append("\t");
+                sb.append(String.format("%2d ", board[i*N + j])); // TODO Do I need a cast (int)
+                //sb.append("\t");
             }
             sb.append("\n");
         }
-        sb.append("\n");
         return sb.toString();
     }
     enum Direction {
@@ -189,7 +186,7 @@ public class Board {
         return indexOfNeighbor;
     }       
     private Board createNeighbor(int index, int indexOfNeighbor) { //Change name to createBlock
-        char[] blocks = new char[N*N];
+        byte[] blocks = new byte[N*N];
         for (int i = 0; i < N*N; i++)
             blocks[i] = this.board[i];
         // Exchange values from index and indexOfNeighbor
@@ -231,8 +228,10 @@ public class Board {
         Board twinS = boardS.twin();
         verify(twinS.equals(boardS) == false,   "Equals S");
         verify(boardL.equals(boardS) == false,  "Equals L");
+        /* TODO
         verify(twinS.hamming()     == 3,        "Hamming Twin");
         verify(twinS.manhattan()   == 4,        "Manhattan Twin");
+        */
         for (Board b : boardL.neighbors()) {
             verify(b.equals(boardS) == false,   "Equals neighbors");
         }
