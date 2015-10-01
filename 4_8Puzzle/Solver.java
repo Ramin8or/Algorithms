@@ -60,12 +60,10 @@ public class Solver {
             Node previousNode = pq.delMin();
             Node prevTwinNode = pqTwin.delMin();
             if (previousNode.getBoard().isGoal()) {
-                //StdOut.println("Solved after " + count + " moves!");
                 solutionNode = previousNode;
                 return;
             }
             if (prevTwinNode.getBoard().isGoal()) {
-                //StdOut.println("Cannot solve it, but twin was solved after " + count + " moves!");
                 return;
             }
 
@@ -80,14 +78,6 @@ public class Solver {
             }
 
             for (Board b : previousNode.getBoard().neighbors()) {
-                /*
-                if (b.isGoal()) {
-                    StdOut.println("GOAL WAS ENQUEUED AT STEP: " + count);
-                    StdOut.println(b);
-                    StdOut.println(previousNode);
-                    StdOut.println("--------------------------");
-                }
-                */
                 if (!b.equals(prevBoard)) {
                     Node node = new Node(b, count, previousNode);
                     pq.insert(node);
@@ -118,8 +108,8 @@ public class Solver {
         return minMoves;
     }
     // sequence of boards in a shortest solution; null if unsolvable
-    public Iterable<Board> solution() { //TODO
-        // Create a Stack and fill it with neighboring boards
+    public Iterable<Board> solution() { 
+        // Create a Stack from algs4 and fill it with neighboring boards
         Stack<Board> stack = new Stack<Board>();
         Node solution = solutionNode;
         while (solution != null) {
@@ -133,9 +123,9 @@ public class Solver {
 
     private class Node implements Comparable<Node> {
         private final Board board;
-        public final int moves;
+        private final int moves;
         private Node previous;
-        public final int manhattan;
+        private final int manhattan;
         private final int hamming;
 
         public Node(Board b, int m, Node prev) {
@@ -146,19 +136,6 @@ public class Solver {
             previous = prev;
         }
         public int compareTo(Node that) {
-            /*
-            if ((this.moves+this.manhattan) < (that.moves+that.manhattan)) 
-                return -1;
-            else if ((this.moves+this.manhattan) > (that.moves+that.manhattan)) 
-                return 1;
-            else {
-                if (this.hamming < that.hamming)
-                    return -1;
-                else if (this.hamming > that.hamming)
-                    return 1;
-                else return 0;
-            }
-            */
             if ((this.moves+this.hamming) < (that.moves+that.hamming)) 
                 return -1;
             else if ((this.moves+this.hamming) > (that.moves+that.hamming)) 
