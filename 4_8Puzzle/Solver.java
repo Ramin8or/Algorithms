@@ -8,6 +8,7 @@
  *  Corner cases.  The constructor should throw a java.lang.NullPointerException if passed a null argument.
  ******************************************************************************/
 
+import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.MinPQ;
 import edu.princeton.cs.algs4.Stack;
@@ -18,11 +19,15 @@ public class Solver {
     private MinPQ<Node> pqTwin; 
     private Node solutionNode;
     private int minMoves;
+
     // find a solution to the initial board (using the A* algorithm)
     public Solver(Board initial) {
         if (initial == null)
             throw new java.lang.NullPointerException(
                 "Null array passed to Solver constructor!");
+        // Initialize class members
+        solutionNode = null;
+        minMoves = -1;
         // Initialize the priority queue for initial board
         pq = new MinPQ<Node>();
         Node initialNode = new Node(initial, 0, null);
@@ -30,36 +35,20 @@ public class Solver {
         pqTwin = new MinPQ<Node>();
         Board twin = initial.twin();
         Node twinNode = new Node(twin, 0, null);
+    
         // First, insert the initial search node into a priority queue. 
         pq.insert(initialNode);
         pqTwin.insert(twinNode);
-        // Then, delete from the priority queue the search node with the 
-        // minimum priority, and insert onto the priority queue all 
-        // neighboring search nodes. 
-        // Repeat this procedure until the search node dequeued is a goal.
-        solutionNode = null;
-        minMoves = -1;
+
         int count = 0;
+        Board prevBoard = null;
+        Board prevTwinBoard = null;
         while (true) {
-            // Dump the pq
-            /*
-            StdOut.println("Step:\t" + count);
-            Node previousNode = pq.delMin();
-            Node prevTwinNode = pqTwin.delMin();
-            StdOut.println("Dequeued: ");
-            StdOut.println(previousNode);
-            StdOut.println("=========");
-
-            Iterator itr = pq.iterator();
-            while (itr.hasNext()) {
-                Object element = itr.next();
-                StdOut.println((Node) element);
-            }            
-            */
-
+            // Delete from priority q the search node with the min priority 
             Node previousNode = pq.delMin();
             Node prevTwinNode = pqTwin.delMin();
             if (previousNode.getBoard().isGoal()) {
+                // Stop the search node dequeued is a goal
                 solutionNode = previousNode;
                 return;
             }
@@ -68,22 +57,27 @@ public class Solver {
             }
 
             count++;
-            Board prevBoard = null;
-            Board prevTwinBoard = null;
-            if (previousNode.previous != null) {
+            if (previousNode.previous != null) 
                 prevBoard = previousNode.previous.getBoard();
-            }
-            if (prevTwinNode.previous != null) {
-                prevTwinBoard = prevTwinNode.previous.getBoard();
-            }
+            else
+                prevBoard = null;
 
-            for (Board b : previousNode.getBoard().neighbors()) {
+            if (prevTwinNode.previous != null) 
+                prevTwinBoard = prevTwinNode.previous.getBoard();
+            else
+                prevTwinBoard = null;
+
+            Iterator<Board> iter = previousNode.getBoard().neighbors().iterator();
+            while (iter.hasNext()) {
+                Board b = (Board) iter.next();
                 if (!b.equals(prevBoard)) {
                     Node node = new Node(b, count, previousNode);
                     pq.insert(node);
                 }
-            }            
-            for (Board b : prevTwinNode.getBoard().neighbors()) {
+            }
+            iter = prevTwinNode.getBoard().neighbors().iterator();
+            while (iter.hasNext()) {
+                Board b = (Board) iter.next();
                 if (!b.equals(prevTwinBoard)) {
                     Node node = new Node(b, count, prevTwinNode);
                     pqTwin.insert(node);
@@ -101,8 +95,10 @@ public class Solver {
             return -1;
         if (minMoves != -1)
             return minMoves;
-        for (Board b : solution()) {
+        Iterator<Board> iter = solution().iterator();
+        while (iter.hasNext()) {
             minMoves++;
+            iter.next();
         }
         // minMoves starts at -1 to exclude initial board
         return minMoves;
@@ -110,6 +106,8 @@ public class Solver {
     // sequence of boards in a shortest solution; null if unsolvable
     public Iterable<Board> solution() { 
         // Create a Stack from algs4 and fill it with neighboring boards
+        if (solutionNode == null)
+            return null;
         Stack<Board> stack = new Stack<Board>();
         Node solution = solutionNode;
         while (solution != null) {

@@ -9,17 +9,16 @@
  ******************************************************************************/
 
 import edu.princeton.cs.algs4.StdOut;
-import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.StdRandom;
-import java.lang.Math;
-import java.util.Queue;
-import java.util.LinkedList;
+import edu.princeton.cs.algs4.LinkedQueue;
 
 public class Board {
     // internal representation of a Board in a 1d array of chars
     private char[] board;
     // dimension N of the 2D Board
     private int N;
+    // Cached neighbors
+    private LinkedQueue<Board> cachedNeighbors;
     // construct a board from an N-by-N array of blocks
     public Board(int[][] blocks) {
         if (blocks == null)
@@ -27,6 +26,7 @@ public class Board {
                 "Null array passed to Board constructor!");
         // Get the N of 2d array and fill up the internal board
         N = blocks.length;
+        cachedNeighbors = null;
         assert (N == blocks[0].length);
         this.board = new char[N*N];
         for (int i = 0; i < N; i++) {
@@ -38,6 +38,7 @@ public class Board {
     // Private constructor, takes array of chars and size
     private Board(char[] blocks, int size2D) {
         N = size2D;
+        cachedNeighbors = null;
         this.board = new char[N*N];
         for (int i = 0; i < N*N; i++)
             this.board[i] = blocks[i];
@@ -107,6 +108,8 @@ public class Board {
     } 
     // all neighboring boards
     public Iterable<Board> neighbors() {
+        if (cachedNeighbors != null)
+            return cachedNeighbors;
         // Find index of block 0
         int indexOfBlank = 0;
         while (indexOfBlank < N*N) {
@@ -116,16 +119,17 @@ public class Board {
         }
         assert (indexOfBlank != N*N);
         // Create a queue and fill it with neighboring boards
-        Queue<Board> q = new LinkedList<Board>();
+        LinkedQueue<Board> q = new LinkedQueue<Board>();
         for (Direction dir : Direction.values()) {
             int indexOfNeighbor = getIndexOfNeighbor(indexOfBlank, dir);
             if (indexOfNeighbor == -1)
                 continue; // Skip invalid neighbors
             Board neighbor = createNeighbor(indexOfBlank, indexOfNeighbor);
             if (neighbor != null)
-                q.add(neighbor);
+                q.enqueue(neighbor);
         }
-        return q;
+        cachedNeighbors = q;
+        return cachedNeighbors;
     }
     // string representation of this board
     public String toString() {
@@ -140,8 +144,8 @@ public class Board {
         }
         return sb.toString();
     }
-    enum Direction {
-        ABOVE, RIGHT, BELOW, LEFT
+    private enum Direction {
+        RIGHT, LEFT, ABOVE, BELOW
     }
     private int getIndexOfNeighbor(int index, Direction direction) {
         // Find index of neighbor based on index
@@ -204,10 +208,10 @@ public class Board {
         verify(!boardS.isGoal(),                "isGoal S");
         verify(!boardL.isGoal(),                "isGoal L");
         Board twinS = boardS.twin();
-        verify(twinS.equals(boardS) == false,   "Equals S");
-        verify(boardL.equals(boardS) == false,  "Equals L");
+        verify(!twinS.equals(boardS),   "Equals S");
+        verify(!boardL.equals(boardS),  "Equals L");
         for (Board b : boardL.neighbors()) {
-            verify(b.equals(boardS) == false,   "Equals neighbors");
+            verify(!b.equals(boardS),   "Equals neighbors");
         }
     }
 }
