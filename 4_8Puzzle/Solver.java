@@ -30,11 +30,11 @@ public class Solver {
         minMoves = -1;
         // Initialize the priority queue for initial board
         pq = new MinPQ<Node>();
-        Node initialNode = new Node(initial, 0, null);
+        Node initialNode = new Node(initial, initial.hamming(), null);
         // Use a twin board and its own priroity queue
         pqTwin = new MinPQ<Node>();
         Board twin = initial.twin();
-        Node twinNode = new Node(twin, 0, null);
+        Node twinNode = new Node(twin, twin.hamming(), null);
     
         // First, insert the initial search node into a priority queue. 
         pq.insert(initialNode);
@@ -53,6 +53,7 @@ public class Solver {
                 return;
             }
             if (prevTwinNode.getBoard().isGoal()) {
+                // Stop the search there is no solution
                 return;
             }
 
@@ -134,9 +135,11 @@ public class Solver {
             previous = prev;
         }
         public int compareTo(Node that) {
-            if ((this.moves+this.hamming) < (that.moves+that.hamming)) 
+            int thisPriority = this.moves + this.hamming;
+            int thatPriority = that.moves + that.hamming;
+            if (thisPriority < thatPriority) 
                 return -1;
-            else if ((this.moves+this.hamming) > (that.moves+that.hamming)) 
+            else if (thisPriority > thatPriority) 
                 return 1;
             else {
                 if (this.manhattan < that.manhattan)

@@ -40,8 +40,7 @@ public class Board {
         N = size2D;
         cachedNeighbors = null;
         this.board = new char[N*N];
-        for (int i = 0; i < N*N; i++)
-            this.board[i] = blocks[i];
+        System.arraycopy(blocks, 0, this.board, 0, N*N);
     }
     // board dimension N                                   
     public int dimension() {
@@ -62,15 +61,15 @@ public class Board {
     public int manhattan() {
         int sum = 0;
         for (int i = 0; i < N*N; i++) {
-            if (board[i] != 0)
                 sum += manhattanDist(i, board[i]);
         }
         return sum;
     }
-    private int manhattanDist(int index, char actualValue) {
+    private int manhattanDist(int index, int actualValue) {
         // For each block at index i, goal value of board[i] is i+1
         // Get goal Row and Column 
-        assert (actualValue != 0);
+        if (actualValue == 0)
+            return 0;
         int goalRow = (actualValue - 1) / N;
         int goalCol = (actualValue - 1) % N;
         int currRow = index / N;  
@@ -80,6 +79,9 @@ public class Board {
     }
     // is this board the goal board? 
     public boolean isGoal() {
+        // Last block in goal is 0
+        if (board[N*N - 1] != 0)
+            return false;
         for (char i = 0; i < N*N - 1; i++) {
             if (board[i] != (i + 1))
                 return false;
@@ -103,8 +105,12 @@ public class Board {
         if (y == null) return false;
         if (y.getClass() != this.getClass()) return false;
         Board that = (Board) y;
-        return (this.N == that.N && 
-                this.toString().equals(that.toString()));
+        if (this.N != that.N) return false;
+        for (int i = N*N - 1; i >= 0; i--) {
+            if (this.board[i] != that.board[i])
+                return false;
+        }
+        return true;
     } 
     // all neighboring boards
     public Iterable<Board> neighbors() {
@@ -169,8 +175,7 @@ public class Board {
     }       
     private Board createNeighbor(int index, int indexOfNeighbor) { //Change name to createBlock
         char[] blocks = new char[N*N];
-        for (int i = 0; i < N*N; i++)
-            blocks[i] = this.board[i];
+        System.arraycopy(this.board, 0, blocks, 0, N*N);
         // Exchange values from index and indexOfNeighbor
         //assert (board[index] == 0);
         blocks[index] = this.board[indexOfNeighbor];
