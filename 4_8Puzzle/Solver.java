@@ -15,10 +15,7 @@ import edu.princeton.cs.algs4.Stack;
 import java.util.Iterator;
 
 public class Solver {
-    private MinPQ<Node> pq; 
-    private MinPQ<Node> pqTwin; 
     private Node solutionNode;
-    private int minMoves;
 
     // find a solution to the initial board (using the A* algorithm)
     public Solver(Board initial) {
@@ -26,21 +23,21 @@ public class Solver {
             throw new java.lang.NullPointerException(
                 "Null array passed to Solver constructor!");
         // Initialize class members
+        MinPQ<Node> pq; 
+        MinPQ<Node> pqTwin; 
         solutionNode = null;
-        minMoves = -1;
         // Initialize the priority queue for initial board
         pq = new MinPQ<Node>();
-        Node initialNode = new Node(initial, initial.hamming(), null);
+        Node initialNode = new Node(initial, null);
         // Use a twin board and its own priroity queue
         pqTwin = new MinPQ<Node>();
         Board twin = initial.twin();
-        Node twinNode = new Node(twin, twin.hamming(), null);
+        Node twinNode = new Node(twin, null);
     
         // First, insert the initial search node into a priority queue. 
         pq.insert(initialNode);
         pqTwin.insert(twinNode);
 
-        int count = 0;
         Board prevBoard = null;
         Board prevTwinBoard = null;
         while (true) {
@@ -57,7 +54,6 @@ public class Solver {
                 return;
             }
 
-            count++;
             if (previousNode.previous != null) 
                 prevBoard = previousNode.previous.getBoard();
             else
@@ -72,7 +68,7 @@ public class Solver {
             while (iter.hasNext()) {
                 Board b = (Board) iter.next();
                 if (!b.equals(prevBoard)) {
-                    Node node = new Node(b, count, previousNode);
+                    Node node = new Node(b, previousNode);
                     pq.insert(node);
                 }
             }
@@ -80,7 +76,7 @@ public class Solver {
             while (iter.hasNext()) {
                 Board b = (Board) iter.next();
                 if (!b.equals(prevTwinBoard)) {
-                    Node node = new Node(b, count, prevTwinNode);
+                    Node node = new Node(b, prevTwinNode);
                     pqTwin.insert(node);
                 }
             }            
@@ -94,15 +90,7 @@ public class Solver {
     public int moves() {
         if (solutionNode == null)
             return -1;
-        if (minMoves != -1)
-            return minMoves;
-        Iterator<Board> iter = solution().iterator();
-        while (iter.hasNext()) {
-            minMoves++;
-            iter.next();
-        }
-        // minMoves starts at -1 to exclude initial board
-        return minMoves;
+        return solutionNode.moves;
     }
     // sequence of boards in a shortest solution; null if unsolvable
     public Iterable<Board> solution() { 
@@ -124,15 +112,20 @@ public class Solver {
         private final Board board;
         private final int moves;
         private Node previous;
+        // Move to Board but add priority here
         private final int manhattan;
         private final int hamming;
 
-        public Node(Board b, int m, Node prev) {
+        public Node(Board b, Node prev) {
             board = b;
-            moves = m;
+            previous = prev;
+            if (previous == null)
+                moves = 0;
+            else 
+                moves = previous.moves + 1;
+            //TODO move to Board
             manhattan = board.manhattan();
             hamming   = board.hamming();
-            previous = prev;
         }
         public int compareTo(Node that) {
             int thisPriority = this.moves + this.hamming;
