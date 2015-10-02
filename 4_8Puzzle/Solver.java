@@ -5,7 +5,7 @@
  *  
  *  For use on Coursera, Algorithms Part I programming assignment.
  *  Specifications: http://coursera.cs.princeton.edu/algs4/assignments/8puzzle.html
- *  Corner cases.  The constructor should throw a java.lang.NullPointerException if passed a null argument.
+ *  Written by Ramin Halviatti
  ******************************************************************************/
 
 import edu.princeton.cs.algs4.In;
@@ -30,49 +30,39 @@ public class Solver {
         pq.insert(new Node(initial, null));
         pqTwin.insert(new Node(initial.twin(), null));
 
-        Board prevBoard = null;
-        Board prevTwinBoard = null;
         while (!pq.isEmpty()) {
             // Delete from priority q the search node with the min priority 
-            Node previousNode = pq.delMin();
-            Node prevTwinNode = pqTwin.delMin();
+            Node dquedNode = pq.delMin();
+            Node dquedTwinNode = pqTwin.delMin();
             // Did we reach the goal?
-            if (previousNode.board.isGoal()) {
+            if (dquedNode.board.isGoal()) {
                 // Stop the search node dequeued is a goal, set solutionNode
-                solutionNode = previousNode;
+                solutionNode = dquedNode;
                 return;
             }
-            if (prevTwinNode.board.isGoal()) {
+            if (dquedTwinNode.board.isGoal()) {
                 // Stop the search there is no solution
                 return;
             }
 
-            // Set previous Node to avoid inserting duplicate boards
-            if (previousNode.previous != null) 
-                prevBoard = previousNode.previous.board;
-            else
-                prevBoard = null;
-            // Same for previous twin Node
-            if (prevTwinNode.previous != null) 
-                prevTwinBoard = prevTwinNode.previous.board;
-            else
-                prevTwinBoard = null;
-
             // Go through neighbors of dequeued node and insert in MinPQ
-            Iterator<Board> iter = previousNode.board.neighbors().iterator();
-            while (iter.hasNext()) {
-                Board b = (Board) iter.next();
-                if (!b.equals(prevBoard)) { // equals handle null prevBoard
-                    pq.insert(new Node(b, previousNode));
-                }
-            }
-            iter = prevTwinNode.board.neighbors().iterator();
-            while (iter.hasNext()) {
-                Board b = (Board) iter.next();
-                if (!b.equals(prevTwinBoard)) { // equals handle null case
-                    pqTwin.insert(new Node(b, prevTwinNode));
-                }
-            }            
+            insertNeighborsInPQ(pq, dquedNode);
+            insertNeighborsInPQ(pqTwin, dquedTwinNode);
+        }
+    }
+
+    // Go through neighbors of node and inserts them in MinPQ
+    private void insertNeighborsInPQ(MinPQ<Node> pq, Node node) {
+        // Set previous Node to avoid inserting duplicate boards
+        Board prevBoard = null;
+        if (node.previous != null) 
+            prevBoard = node.previous.board;
+
+        Iterator<Board> iter = node.board.neighbors().iterator();
+        while (iter.hasNext()) {
+            Board b = (Board) iter.next();
+            if (!b.equals(prevBoard)) // equals handle null prevBoard
+                pq.insert(new Node(b, node));
         }
     }
     // is the initial board solvable?

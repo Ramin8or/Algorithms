@@ -5,7 +5,7 @@
  *  
  *  For use on Coursera, Algorithms Part I programming assignment.
  *  Specifications: http://coursera.cs.princeton.edu/algs4/assignments/8puzzle.html
- *
+ *  Written by Ramin Halviatti
  ******************************************************************************/
 
 import edu.princeton.cs.algs4.StdOut;
@@ -47,45 +47,15 @@ public class Board {
         System.arraycopy(blocks, 0, this.board, 0, N*N);
         cacheValues();
     }
-    // board dimension N                                   
+    // Use cached values for these functions                               
     public int dimension() {
         return N;
     }                 
-    // number of blocks out of place, ignore blank 0 block
-    // For each block at index i, goal value of board[i] is i+1
-    // except for blank block 0 which is being ignored in calculation
     public int hamming() {
         return hamming;
     }                   
-    // sum of Manhattan distances between blocks and goal, ignore 0 block
     public int manhattan() {
         return manhattan;
-    }
-    private void cacheValues() {
-        manhattan = 0;
-        hamming = 0;
-        goal = true;
-        for (int i = 0; i < N*N; i++) {
-            // Handle 0 block
-            if (board[i] == 0) {
-                if (goal) {
-                    // Goal board has 0 block only as its last element
-                    goal = (i == (N*N - 1));
-                }
-                // Skip check for manhattan and hamming if block is 0
-                continue; 
-            }
-            // Handle Hamming and Goal by checking i vs board[i]
-            if (board[i] != (i+1)) {
-                hamming++;
-                if (goal)
-                    goal = false;
-            }
-            // Compute Manhattan distance
-            int rowDistance = Math.abs(((board[i] - 1) / N) - (i / N));
-            int colDistance = Math.abs(((board[i] - 1) % N) - (i % N));
-            manhattan += (rowDistance + colDistance);
-        }
     }
     public boolean isGoal() {
         return goal;
@@ -151,6 +121,33 @@ public class Board {
         }
         return sb.toString();
     }
+    // Compute cached values for Hamming, Manhattan and Goal
+    private void cacheValues() {
+        manhattan = 0;
+        hamming = 0;
+        goal = true;
+        for (int i = 0; i < N*N; i++) {
+            // Handle 0 block
+            if (board[i] == 0) {
+                if (goal) {
+                    // Goal board has 0 block only as its last element
+                    goal = (i == (N*N - 1));
+                }
+                // Skip check for manhattan and hamming if block is 0
+                continue; 
+            }
+            // Handle Hamming and Goal by checking i vs board[i]
+            if (board[i] != (i+1)) {
+                hamming++;
+                if (goal)
+                    goal = false;
+            }
+            // Compute Manhattan distance
+            int rowDistance = Math.abs(((board[i] - 1) / N) - (i / N));
+            int colDistance = Math.abs(((board[i] - 1) % N) - (i % N));
+            manhattan += (rowDistance + colDistance);
+        }
+    }
     private enum Direction {
         RIGHT, LEFT, ABOVE, BELOW
     }
@@ -184,8 +181,7 @@ public class Board {
         Board neighbor = new Board(blocks, N);
         return neighbor;
     }
-    // For unit testing
-    // verification helper
+    // For unit testing verification helper
     private static void verify(boolean b, String message) {
         if (b) {
             StdOut.println("PASSED: " + message);
