@@ -23,61 +23,54 @@ public class Solver {
             throw new java.lang.NullPointerException(
                 "Null array passed to Solver constructor!");
         // Initialize class members
-        MinPQ<Node> pq; 
-        MinPQ<Node> pqTwin; 
+        MinPQ<Node> pq = new MinPQ<Node>();
+        MinPQ<Node> pqTwin = new MinPQ<Node>(); 
         solutionNode = null;
-        // Initialize the priority queue for initial board
-        pq = new MinPQ<Node>();
-        Node initialNode = new Node(initial, null);
-        // Use a twin board and its own priroity queue
-        pqTwin = new MinPQ<Node>();
-        Board twin = initial.twin();
-        Node twinNode = new Node(twin, null);
-    
         // First, insert the initial search node into a priority queue. 
-        pq.insert(initialNode);
-        pqTwin.insert(twinNode);
+        pq.insert(new Node(initial, null));
+        pqTwin.insert(new Node(initial.twin(), null));
 
         Board prevBoard = null;
         Board prevTwinBoard = null;
-        while (true) {
+        while (!pq.isEmpty()) {
             // Delete from priority q the search node with the min priority 
             Node previousNode = pq.delMin();
             Node prevTwinNode = pqTwin.delMin();
-            if (previousNode.getBoard().isGoal()) {
-                // Stop the search node dequeued is a goal
+            // Did we reach the goal?
+            if (previousNode.board.isGoal()) {
+                // Stop the search node dequeued is a goal, set solutionNode
                 solutionNode = previousNode;
                 return;
             }
-            if (prevTwinNode.getBoard().isGoal()) {
+            if (prevTwinNode.board.isGoal()) {
                 // Stop the search there is no solution
                 return;
             }
 
+            // Set previous Node to avoid inserting duplicate boards
             if (previousNode.previous != null) 
-                prevBoard = previousNode.previous.getBoard();
+                prevBoard = previousNode.previous.board;
             else
                 prevBoard = null;
-
+            // Same for previous twin Node
             if (prevTwinNode.previous != null) 
-                prevTwinBoard = prevTwinNode.previous.getBoard();
+                prevTwinBoard = prevTwinNode.previous.board;
             else
                 prevTwinBoard = null;
 
-            Iterator<Board> iter = previousNode.getBoard().neighbors().iterator();
+            // Go through neighbors of dequeued node and insert in MinPQ
+            Iterator<Board> iter = previousNode.board.neighbors().iterator();
             while (iter.hasNext()) {
                 Board b = (Board) iter.next();
-                if (!b.equals(prevBoard)) {
-                    Node node = new Node(b, previousNode);
-                    pq.insert(node);
+                if (!b.equals(prevBoard)) { // equals handle null prevBoard
+                    pq.insert(new Node(b, previousNode));
                 }
             }
-            iter = prevTwinNode.getBoard().neighbors().iterator();
+            iter = prevTwinNode.board.neighbors().iterator();
             while (iter.hasNext()) {
                 Board b = (Board) iter.next();
-                if (!b.equals(prevTwinBoard)) {
-                    Node node = new Node(b, prevTwinNode);
-                    pqTwin.insert(node);
+                if (!b.equals(prevTwinBoard)) { // equals handle null case
+                    pqTwin.insert(new Node(b, prevTwinNode));
                 }
             }            
         }
@@ -100,7 +93,7 @@ public class Solver {
         Stack<Board> stack = new Stack<Board>();
         Node solution = solutionNode;
         while (solution != null) {
-            Board b = solution.getBoard();
+            Board b = solution.board;
             if (b != null)
                 stack.push(b);
             solution = solution.previous;
@@ -110,11 +103,9 @@ public class Solver {
 
     private class Node implements Comparable<Node> {
         private final Board board;
+        private final Node previous;
         private final int moves;
-        private Node previous;
-        // Move to Board but add priority here
-        private final int manhattan;
-        private final int hamming;
+        private final int priority;
 
         public Node(Board b, Node prev) {
             board = b;
@@ -123,34 +114,15 @@ public class Solver {
                 moves = 0;
             else 
                 moves = previous.moves + 1;
-            //TODO move to Board
-            manhattan = board.manhattan();
-            hamming   = board.hamming();
+            priority = moves + board.manhattan();
         }
         public int compareTo(Node that) {
-            int thisPriority = this.moves + this.hamming;
-            int thatPriority = that.moves + that.hamming;
-            if (thisPriority < thatPriority) 
-                return -1;
-            else if (thisPriority > thatPriority) 
-                return 1;
-            else {
-                if (this.manhattan < that.manhattan)
-                    return -1;
-                else if (this.manhattan > that.manhattan)
-                    return 1;
-                else return 0;
-            }
-        }
-        public Board getBoard() {
-            return this.board;
+            return this.priority - that.priority;
         }
         public String toString() {
             StringBuilder sb = new StringBuilder();
-            sb.append("priority\t= " + (moves+manhattan) + "\n");
+            sb.append("priority\t= " + priority + "\n");
             sb.append("moves\t\t= "    +  moves + "\n");
-            sb.append("manhattan\t= "+  manhattan + "\n");
-            sb.append("hamming\t= "+  hamming + "\n");
             sb.append(this.board.toString());
             return sb.toString();
         }

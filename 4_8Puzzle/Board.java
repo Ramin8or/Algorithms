@@ -17,7 +17,10 @@ public class Board {
     private char[] board;
     // dimension N of the 2D Board
     private int N;
-    // Cached neighbors
+    // Cached values
+    private int manhattan;
+    private int hamming;
+    private boolean goal;
     private LinkedQueue<Board> cachedNeighbors;
     // construct a board from an N-by-N array of blocks
     public Board(int[][] blocks) {
@@ -34,6 +37,7 @@ public class Board {
                 this.board[i*N + j] = (char) blocks[i][j];
             }
         }
+        cacheValues();
     }
     // Private constructor, takes array of chars and size
     private Board(char[] blocks, int size2D) {
@@ -41,6 +45,7 @@ public class Board {
         cachedNeighbors = null;
         this.board = new char[N*N];
         System.arraycopy(blocks, 0, this.board, 0, N*N);
+        cacheValues();
     }
     // board dimension N                                   
     public int dimension() {
@@ -50,44 +55,40 @@ public class Board {
     // For each block at index i, goal value of board[i] is i+1
     // except for blank block 0 which is being ignored in calculation
     public int hamming() {
-        int count = 0;
-        for (int i = 0; i < N*N; i++) {
-            if (board[i] != 0 && board[i] != (i+1))
-                count++;
-        }
-        return count;
+        return hamming;
     }                   
     // sum of Manhattan distances between blocks and goal, ignore 0 block
     public int manhattan() {
-        int sum = 0;
+        return manhattan;
+    }
+    private void cacheValues() {
+        manhattan = 0;
+        hamming = 0;
+        goal = true;
         for (int i = 0; i < N*N; i++) {
-                sum += manhattanDist(i, board[i]);
+            // Handle 0 block
+            if (board[i] == 0) {
+                if (goal) {
+                    // Goal board has 0 block only as its last element
+                    goal = (i == (N*N - 1));
+                }
+                // Skip check for manhattan and hamming if block is 0
+                continue; 
+            }
+            // Handle Hamming and Goal by checking i vs board[i]
+            if (board[i] != (i+1)) {
+                hamming++;
+                if (goal)
+                    goal = false;
+            }
+            // Compute Manhattan distance
+            int rowDistance = Math.abs(((board[i] - 1) / N) - (i / N));
+            int colDistance = Math.abs(((board[i] - 1) % N) - (i % N));
+            manhattan += (rowDistance + colDistance);
         }
-        return sum;
     }
-    private int manhattanDist(int index, int actualValue) {
-        // For each block at index i, goal value of board[i] is i+1
-        // Get goal Row and Column 
-        if (actualValue == 0)
-            return 0;
-        int goalRow = (actualValue - 1) / N;
-        int goalCol = (actualValue - 1) % N;
-        int currRow = index / N;  
-        int currCol = index % N;
-        int distance = Math.abs(goalRow - currRow) + Math.abs(goalCol - currCol);
-        return distance;
-    }
-    // is this board the goal board? 
     public boolean isGoal() {
-        // Last block in goal is 0
-        if (board[N*N - 1] != 0)
-            return false;
-        for (char i = 0; i < N*N - 1; i++) {
-            if (board[i] != (i + 1))
-                return false;
-        }
-        assert (board[N*N - 1] == 0); // All number are in order, last should be block 0
-        return true;
+        return goal;
     }       
     // a board that is obtained by exchanging any pair of blocks
     public Board twin() { 
