@@ -24,6 +24,7 @@ import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.Point2D;
 import edu.princeton.cs.algs4.RectHV;
 import edu.princeton.cs.algs4.StdDraw;
+import edu.princeton.cs.algs4.LinkedQueue;
 
 /**
  * 
@@ -241,7 +242,50 @@ then at the next level the x-coordinate, and so forth.
         // Draw right or top
         draw(node.rt, !vertical);
     }
+    // all points that are inside the rectangle
+    public Iterable<Point2D> range(RectHV rect) {
+        if (rect == null)
+            throw new NullPointerException(
+                "RectHV cannot be null!");
+        // Create a queue and fill it with points that are inside rect
+        LinkedQueue<Point2D> q = new LinkedQueue<Point2D>();
+        range(q, root, rect, true);
+        return q;
+    }
+    public void range(LinkedQueue<Point2D> q, Node node, RectHV rect, boolean vertical) {
+        // Does the query rect contain the node?
+        if (node == null)
+            return;
+        if (!rect.intersects(node.rect)) 
+            return;
 
+        if (rect.contains(node.p))
+            q.enqueue(node.p);
+
+        range(q, node.lb, rect, !vertical);
+        range(q, node.rt, rect, !vertical);
+    }            
+    /*
+    // a nearest neighbor in the set to point p; null if the set is empty 
+    public Point2D nearest(Point2D p) {
+        if (p == null)
+            throw new NullPointerException(
+                "Point2D cannot be null!");
+        if (set.isEmpty())
+            return null;
+        double minDistance = Double.MAX_VALUE;
+        Point2D minPoint = null;
+        for (Point2D point : set) {
+            double distance = p.distanceSquaredTo(point);
+            if (distance < minDistance) {
+                minDistance = distance;
+                minPoint = point; 
+            }               
+        }
+        return minPoint;
+    }     
+    */    
+    // unit testing of the methods (optional)
     public static void main(String[] args) {
 
         String filename = args[0];
@@ -274,5 +318,9 @@ then at the next level the x-coordinate, and so forth.
         StdDraw.setPenRadius();
         kdtree.draw();
         StdDraw.show();
+
+        RectHV r = new RectHV(0.08, 0.08, 0.38, 0.9);
+        for (Point2D p1 : kdtree.range(r)) 
+            StdOut.println("In range: " + p1);
     }
 }
