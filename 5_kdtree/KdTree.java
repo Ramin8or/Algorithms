@@ -1,10 +1,3 @@
-/*
-One approach is to include the point, a link to the left/bottom subtree, a link to the right/top subtree, and an axis-aligned rectangle 
-corresponding to the node.
-Unlike the Node class for BST, this Node class is static because it does not refer to a generic Key or Value type that depends on the object associated with the outer class. This saves the 8-byte inner class object overhead. (Making the Node class static in BST is also possible if you make the Node type itself generic as well). Also, since we don't need to implement the rank and select operations, there is no need to store the subtree size.
-Writing KdTree. Start by writing isEmpty() and size(). These should be very easy. From there, write a simplified version of insert() which does everything except set up the RectHV for each node. Write the contains() method, and use this to test that insert() was implemented properly. Note that insert() and contains() are best implemented by using private helper methods analogous to those found on page 399 of the book or by looking at BST.java. We recommend using orientation as an argument to these helper methods.
-Now add the code to insert() which sets up the RectHV for each Node. Next, write draw(), and use this to test these rectangles. Finish up KdTree with the nearest and range methods. Finally, test your implementation using our interactive client programs as well as any other tests you'd like to conduct.
-*/
 /******************************************************************************
  *  Compilation:  javac-algs4 PointSET.java
  *  Execution:    java-algs4  PointSET
@@ -141,6 +134,8 @@ public class KdTree {
 
         this.size++; 
         root = put(root, point, true);
+        if (root != null && root.rect == null) 
+            root.rect = new RectHV(0.0, 0.0, 1.0, 1.0);
     }
 /*
 Search and insert. The algorithms for search and insert are similar to those for BSTs, 
@@ -191,8 +186,6 @@ then at the next level the x-coordinate, and so forth.
         RectHV parentRect = parentNode.rect;
         if (parentRect == null) {
             parentRect = new RectHV(0.0, 0.0, 1.0, 1.0);
-            if (parentNode == root)
-                parentNode.rect = parentRect;
         }
         if (vertical) {
             if (lb)
@@ -225,7 +218,7 @@ then at the next level the x-coordinate, and so forth.
         draw(root, true);
     }
 
-    public void draw(Node node, boolean vertical) {
+    private void draw(Node node, boolean vertical) {
         if (node == null)
             return;
         // Draw left or bottom
@@ -252,9 +245,11 @@ then at the next level the x-coordinate, and so forth.
         range(q, root, rect, true);
         return q;
     }
-    public void range(LinkedQueue<Point2D> q, Node node, RectHV rect, boolean vertical) {
+    private void range(LinkedQueue<Point2D> q, Node node, RectHV rect, boolean vertical) {
         // Does the query rect contain the node?
         if (node == null)
+            return;
+        if (node.rect == null)
             return;
         if (!rect.intersects(node.rect)) 
             return;
@@ -265,26 +260,70 @@ then at the next level the x-coordinate, and so forth.
         range(q, node.lb, rect, !vertical);
         range(q, node.rt, rect, !vertical);
     }            
-    /*
     // a nearest neighbor in the set to point p; null if the set is empty 
-    public Point2D nearest(Point2D p) {
-        if (p == null)
+    public Point2D nearest(Point2D point) {
+        if (point == null)
             throw new NullPointerException(
                 "Point2D cannot be null!");
-        if (set.isEmpty())
+        if (root == null)
             return null;
-        double minDistance = Double.MAX_VALUE;
-        Point2D minPoint = null;
-        for (Point2D point : set) {
-            double distance = p.distanceSquaredTo(point);
-            if (distance < minDistance) {
-                minDistance = distance;
-                minPoint = point; 
+        return nearest(root, point, true, Double.MAX_VALUE);
+    }
+    private Point2D nearest(Node node, Point2D point, boolean vertical, double minDist) {
+        if (node == null) 
+            return null;
+        if (node.rect == null)
+            return null;
+        if (node.rect.distanceSquaredTo(point) > minDist)
+            return null;
+
+        Point2D minPoint = null;        
+        Node firstSearch = null;
+        Node nextSearch  = null;
+        Point2D searchPoint = null;
+
+        double cmp = 0.0;
+        if (vertical) 
+            cmp = point.x() - node.p.x();
+        else 
+            cmp = point.y() - node.p.y();
+
+        if (cmp < 0) { 
+            firstSearch = node.lb;
+            nextSearch  = node.rt;
+        }
+        else if (cmp >= 0) {
+            firstSearch = node.rt;
+            nextSearch  = node.lb;
+            if (point.equals(node.p))
+                return node.p; // TODO is this right?
+        } 
+        // Check this node
+        double distance = node.p.distanceSquaredTo(point);
+        if (distance < minDist) {
+            minDist = distance;
+            minPoint = node.p; 
+        }               
+        // Now do the first search
+        searchPoint = nearest(firstSearch, point, !vertical, minDist);
+        if (searchPoint != null) {
+            distance = searchPoint.distanceSquaredTo(point);
+            if (distance < minDist) {
+                minDist = distance;
+                minPoint = searchPoint; 
+            }               
+        }
+        searchPoint = nearest(nextSearch, point, !vertical, minDist);
+        if (searchPoint != null) {
+            distance = searchPoint.distanceSquaredTo(point);
+            if (distance < minDist) {
+                minDist = distance; // This is not being used TODO
+                minPoint = searchPoint; 
             }               
         }
         return minPoint;
-    }     
-    */    
+    }
+
     // unit testing of the methods (optional)
     public static void main(String[] args) {
 

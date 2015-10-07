@@ -12,7 +12,6 @@
  *  Written by Ramin Halviatti
  ******************************************************************************/
 
-import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.SET;
 import edu.princeton.cs.algs4.Point2D;
 import edu.princeton.cs.algs4.RectHV;
@@ -20,7 +19,7 @@ import edu.princeton.cs.algs4.LinkedQueue;
 
 public class PointSET {
     // Internal SET which uses red-black BST
-    SET<Point2D> set;
+    private SET<Point2D> set;
     // construct an empty set of points 
     public PointSET() {
         set = new SET<Point2D>();
