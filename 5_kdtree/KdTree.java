@@ -1,11 +1,13 @@
 /******************************************************************************
- *  Compilation:  javac-algs4 PointSET.java
- *  Execution:    java-algs4  PointSET
+ *  Compilation:  javac-algs4 KdTree.java
+ *  Execution:    java-algs4  KdTree
  *  Dependencies: Point2D, RectHV
  *  
- *  Brute-force implementation. Write a mutable data type PointSET.java that 
- *  represents a set of points in the unit square. Implement the API by using a 
- *  red-black BST (using either SET from algs4.jar or java.util.TreeSet).
+ *  2d-tree implementation. 
+ *  Write a mutable data type KdTree.java that uses a 2d-tree to implement the same API 
+ *  as PointSET. A 2d-tree is a generalization of a BST to two-dimensional keys. 
+ *  The idea is to build a BST with points in the nodes, using the x- and y-coordinates 
+ *  of the points as keys in strictly alternating sequence.
  * 
  *  For use on Coursera, Algorithms Part I programming assignment.
  *  Specifications: http://coursera.cs.princeton.edu/algs4/assignments/kdtree.html
@@ -20,11 +22,11 @@ import edu.princeton.cs.algs4.StdDraw;
 import edu.princeton.cs.algs4.LinkedQueue;
 
 /**
- * 
+ * KdTree implementation
  */
 public class KdTree {
-    private Node root;             // root of BST
-    private int  size;
+    private Node root;          // root of BST
+    private int  size;          // Size of nodes in KdTree
 
     private static class Node {
         private Point2D p;      // the point
@@ -119,13 +121,10 @@ public class KdTree {
     }
 
     /**
-     * Inserts the key-value pair into the symbol table, overwriting the old value
-     * with the new value if the key is already in the symbol table.
-     * If the value is <tt>null</tt>, this effectively deletes the key from the symbol table.
+     * Inserts the point in the KdTree
      *
-     * @param  key the key
-     * @param  val the value
-     * @throws NullPointerException if <tt>key</tt> is <tt>null</tt>
+     * @param  Point the point
+     * @throws NullPointerException if <tt>point</tt> is <tt>null</tt>
      */
     public void insert(Point2D point) {
         if (point == null)
@@ -137,14 +136,22 @@ public class KdTree {
         if (root != null && root.rect == null) 
             root.rect = new RectHV(0.0, 0.0, 1.0, 1.0);
     }
-/*
-Search and insert. The algorithms for search and insert are similar to those for BSTs, 
-but at the root we use the x-coordinate 
-(if the point to be inserted has a smaller x-coordinate than the point at the root, go left; otherwise go right); 
-then at the next level, we use the y-coordinate 
-(if the point to be inserted has a smaller y-coordinate than the point in the node, go left; otherwise go right); 
-then at the next level the x-coordinate, and so forth.
-*/
+
+    /** 
+    * Recursive helper function for insert
+    * 
+    * The algorithms for search and insert are similar to those for BSTs, 
+    * but at the root we use the x-coordinate (if the point to be inserted 
+    * has a smaller x-coordinate than the point at the root, go left; 
+    * otherwise go right); then at the next level, we use the y-coordinate 
+    * (if the point to be inserted has a smaller y-coordinate than the point 
+    * in the node, go left; otherwise go right); then at the next level the 
+    * x-coordinate, and so forth.
+    * @param  Node denotes the parent level node
+    * @param  Point is the point that will be inserted
+    * @param  Vertical denotes the orrientation of the node. 
+    *         Nodes at levels that are even are vertical, odd leve nodes are horizontal.
+    */
     private Node put(Node node, Point2D point, boolean vertical) {
         if (node == null) {
             return new Node(point, null);
@@ -167,7 +174,7 @@ then at the next level the x-coordinate, and so forth.
             else
                 node.rt = put(node.rt, point, !vertical);
         }
-        // Set the rectangle
+        // Set up the rectangle
         if (cmp < 0.0) {
             if (node.lb != null && node.lb.rect == null) 
                 node.lb.rect = setNodeRect(node, vertical, true);
@@ -179,9 +186,7 @@ then at the next level the x-coordinate, and so forth.
 
         return node;
     }
-    // TODO this is all wrong, need to know right, left, top bottom
     private RectHV setNodeRect(Node parentNode, boolean vertical, boolean lb) {
-        // TODO clean this up
         RectHV newRect = null;
         RectHV parentRect = parentNode.rect;
         if (parentRect == null) {
@@ -211,9 +216,8 @@ then at the next level the x-coordinate, and so forth.
     }
 
     /**
-     * 
+     * draw all points to standard draw 
      */
-    // draw all points to standard draw 
     public void draw() {
         draw(root, true);
     }
@@ -296,7 +300,7 @@ then at the next level the x-coordinate, and so forth.
             firstSearch = node.rt;
             nextSearch  = node.lb;
             if (point.equals(node.p))
-                return node.p; // TODO is this right?
+                return node.p; 
         } 
         // Check this node
         double distance = node.p.distanceSquaredTo(point);
@@ -313,11 +317,11 @@ then at the next level the x-coordinate, and so forth.
                 minPoint = searchPoint; 
             }               
         }
+        // Last do the next search which most likely will be pruned
         searchPoint = nearest(nextSearch, point, !vertical, minDist);
         if (searchPoint != null) {
             distance = searchPoint.distanceSquaredTo(point);
             if (distance < minDist) {
-                minDist = distance; // This is not being used TODO
                 minPoint = searchPoint; 
             }               
         }
@@ -326,40 +330,5 @@ then at the next level the x-coordinate, and so forth.
 
     // unit testing of the methods (optional)
     public static void main(String[] args) {
-
-        String filename = args[0];
-        In in = new In(filename);
-
-        KdTree kdtree = new KdTree();
-        while (!in.isEmpty()) {
-            double x = in.readDouble();
-            double y = in.readDouble();
-            Point2D p = new Point2D(x, y);
-            kdtree.insert(p);
-        }
-        Point2D p = new Point2D(0.975528, 0.345492);
-        if (kdtree.contains(p))
-            StdOut.println("Success!");
-        else 
-            StdOut.println("Failure!");
-
-        p = new Point2D(0.975527, 0.345492);
-        if (!kdtree.contains(p))
-            StdOut.println("Success!");
-        else 
-            StdOut.println("Failure!");
-
-        StdOut.println("Size: " + kdtree.size());
-
-        //StdDraw.show(0);
-        // draw the points
-        StdDraw.clear();
-        StdDraw.setPenRadius();
-        kdtree.draw();
-        StdDraw.show();
-
-        RectHV r = new RectHV(0.08, 0.08, 0.38, 0.9);
-        for (Point2D p1 : kdtree.range(r)) 
-            StdOut.println("In range: " + p1);
     }
 }
