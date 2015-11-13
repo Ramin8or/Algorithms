@@ -2,7 +2,7 @@
  *  Compilation:  javac-algs4 SAP.java
  *  Execution:    java-algs4  SAP  (if digraph file is not specified uses
                                     ./test_data/digraph1.txt file)
- *  Dependencies: DeluxeBFS, algs4.In, algs4.Digraph, algs4.StdIn
+ *  Dependencies: DeluxeBFS, algs4.In, algs4.Digraph, algs4.StdIn, algs4.StdOut
  *  
  *  Shortest ancestral path (SAP) 
  *  An ancestral path between two vertices v and w in a digraph is a directed path 
@@ -17,22 +17,27 @@
 import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.Digraph;
 import edu.princeton.cs.algs4.StdIn;
+import edu.princeton.cs.algs4.StdOut;
 
 public class SAP {
 
     // constructor takes a digraph (not necessarily a DAG)
     public SAP(Digraph G) {
-        if (G == null)
+        if (G == null) {
             throw new NullPointerException(
                 "Null argument specified.");
+        }
         this.G = new Digraph(G);
-        bfs1 = new DeluxeBFS(G);
-        bfs2 = new DeluxeBFS(G);
+        // DeluxeBFS is mutable so use this.G
+        bfs1 = new DeluxeBFS(this.G);
+        bfs2 = new DeluxeBFS(this.G);
         vCached = wCached = lengthCached = ancestorCached = -1;
     }
 
     // length of shortest ancestral path between v and w; -1 if no such path
     public int length(int v, int w) {
+        validateParam(v);
+        validateParam(w);
         if (v == vCached && w == wCached) {
             return lengthCached;
         }
@@ -42,6 +47,8 @@ public class SAP {
 
     // a common ancestor of v and w that participates in a shortest ancestral path; -1 if no such path
     public int ancestor(int v, int w) {
+        validateParam(v);
+        validateParam(w);
         if (v == vCached && w == wCached) {
             return ancestorCached;
         }
@@ -49,11 +56,10 @@ public class SAP {
         return ancestorCached;
     }
 
-    // length of shortest ancestral path between any vertex in v and any vertex in w; -1 if no such path
-    public int length(Iterable<Integer> v, Iterable<Integer> w) {
-        if (v == null || w == null)
-            throw new NullPointerException(
-                "Null argument specified.");
+    private int lengthOrAncestor(Iterable<Integer> v, Iterable<Integer> w, 
+                                 boolean returnLength) {
+        validateParam(v);
+        validateParam(w);
 
         bfs1.setSource(v);
         bfs2.setSource(w);
@@ -69,36 +75,45 @@ public class SAP {
                 }
             }
         }
-        return minSAP;
+        if (returnLength) {
+            if (minSAP == Integer.MAX_VALUE)
+                return -1;
+            return minSAP;
+        }
+        else
+            return idSAP;
+    }
+
+    // length of shortest ancestral path between any vertex in v and any vertex in w; -1 if no such path
+    public int length(Iterable<Integer> v, Iterable<Integer> w) {
+        return lengthOrAncestor(v, w, true);
     }
 
     // a common ancestor that participates in shortest ancestral path; -1 if no such path
     public int ancestor(Iterable<Integer> v, Iterable<Integer> w) {
-        if (v == null || w == null)
-            throw new NullPointerException(
-                "Null argument specified.");
-
-        // TODO this is duplicate code 
-        bfs1.setSource(v);
-        bfs2.setSource(w);
-
-        int minSAP = Integer.MAX_VALUE;
-        int idSAP = -1;
-        for (int i = 0; i < G.V(); i++) {
-            if (bfs1.hasPathTo(i) && bfs2.hasPathTo(i)) {
-                int distance = bfs1.distTo(i) + bfs2.distTo(i);
-                if (distance < minSAP) {
-                    minSAP = distance;
-                    idSAP = i;
-                }
-            }
-        }
-        return idSAP;
+        return lengthOrAncestor(v, w, false);
     }
 
     private Digraph G;
     private int vCached, wCached, lengthCached, ancestorCached;
     private DeluxeBFS bfs1, bfs2;
+
+    private void validateParam(int v) {
+        if (v < 0 || v >= G.V())
+            throw new IndexOutOfBoundsException(
+                "Invalid vertex specified.");
+    }
+    
+    private void validateParam(Iterable<Integer> sources) {
+        if (sources == null)
+            throw new NullPointerException(
+                "Null argument specified.");
+        for (int s : sources) {
+            if (s < 0 || s >= G.V())
+                throw new IndexOutOfBoundsException(
+                    "Invalid vertex specified.");
+        }
+    }
 
     private void refreshCache(int v, int w)
     {

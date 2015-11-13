@@ -4,6 +4,7 @@
  *  Dependencies: Digraph.java Queue.java Stack.java
  *  This code was taken from: algs4.BreadthFirstDirectedPaths.java
  *  and modified to optimize the BFS array initialization.
+ *  Note that the passed in Digraph is used by reference not copied.
  *
  *  For use on Coursera, Algorithms Part II programming assignment.
  *  Specifications: http://coursera.cs.princeton.edu/algs4/assignments/wordnet.html
@@ -31,6 +32,7 @@ import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.Digraph;
 import edu.princeton.cs.algs4.Queue;
 import edu.princeton.cs.algs4.Stack;
+import edu.princeton.cs.algs4.StdOut;
 
 
 public class DeluxeBFS {
@@ -46,7 +48,7 @@ public class DeluxeBFS {
      * @param s the source vertex
      */
     public DeluxeBFS(Digraph G) {
-        this.G = new Digraph(G);
+        this.G = G; // This class is mutable, to make it immutable create a new digraph 
         marked = new boolean[this.G.V()];
         distTo = new int[this.G.V()];
         edgeTo = new int[this.G.V()];
@@ -68,23 +70,11 @@ public class DeluxeBFS {
     }
 
     public void setSource(int s) {
-        if (s < 0 || s >= G.V())
-            throw new IndexOutOfBoundsException(
-                "Invalid vertex specified.");
-
         initializeArrays();
         bfs(G, s);        
     }
 
     public void setSource(Iterable<Integer> sources) {
-        if (sources == null)
-            throw new NullPointerException(
-                "Null argument specified.");
-        for (int s : sources) {
-            if (s < 0 || s >= G.V())
-                throw new IndexOutOfBoundsException(
-                    "Invalid vertex specified.");
-        }
         initializeArrays();
         bfs(G, sources);                
     }

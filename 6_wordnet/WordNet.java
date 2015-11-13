@@ -22,6 +22,7 @@
  ******************************************************************************/
 
 import edu.princeton.cs.algs4.In;
+import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.Digraph;
 import edu.princeton.cs.algs4.Bag;
 import java.util.ArrayList;
@@ -39,17 +40,16 @@ public class WordNet {
         nounMap = new HashMap<String, Bag<Integer>>();
         // Process synsets file 
         int numOfSynsets = processSynsetsFile(synsets);
-        try {
-            // Create digraph
-            Digraph G = new Digraph(numOfSynsets);
-            // Process hypernyms file and populate digraph
-            processHypernymsFile(hypernyms, G);
-            // Create the Shortest Ancestoral Path
-            sap = new SAP(G);
-        }
-        catch (Exception e) {
+        // Create digraph
+        Digraph G = new Digraph(numOfSynsets);
+        // Process hypernyms file and populate digraph
+        processHypernymsFile(hypernyms, G);
+        // Create the Shortest Ancestoral Path
+        sap = new SAP(G);
+        // Verify that digraph is a rooted DAG
+        if (!isRootedDAG(G)) {
             throw new IllegalArgumentException(
-                "The input does not correspond to a rooted DAG.");            
+                "The input is not a rooted DAG.");            
         }
     }
 
@@ -73,7 +73,7 @@ public class WordNet {
             throw new NullPointerException(
                 "Null word specified.");
         if (!isNoun(nounA) || !isNoun(nounB)) 
-            throw new NullPointerException(
+            throw new IllegalArgumentException(
                 "Non-word argument specified.");
         // Map nouns to integers and pass to SAP.length()
         return sap.length(nounMap.get(nounA), nounMap.get(nounB));
@@ -87,7 +87,7 @@ public class WordNet {
             throw new NullPointerException(
                 "Null word specified.");
         if (!isNoun(nounA) || !isNoun(nounB)) 
-            throw new NullPointerException(
+            throw new IllegalArgumentException(
                 "Non-word argument specified.");
         // Get ancestor id using SAP.ancestor
         int ancestorId = sap.ancestor(nounMap.get(nounA), nounMap.get(nounB));
@@ -105,6 +105,27 @@ public class WordNet {
     // Map an individual noun (from field 2 of synsets file) to all the ids
     // it corresponds to (in a bag if integers)
     private HashMap<String, Bag<Integer>> nounMap; 
+
+    // Verify that only one vertex has no outgoing edges
+    private boolean isRootedDAG(Digraph G) {
+        boolean foundRoot = false;
+        int rootVertex = -1;
+        for (int v = 0; v < G.V(); v++) {
+            for (int w : G.adj(v)) {
+                if (G.outdegree(w) == 0) {
+                    if (!foundRoot) {
+                        foundRoot = true;
+                        rootVertex = w;
+                    }
+                    else {
+                        if (w != rootVertex)
+                            return false;
+                    }
+                }
+            }
+        }
+        return foundRoot;
+    }
 
     // Add each noun in synonym set to nounMap, by
     // mapping each word to the passed in synsetId 
