@@ -15,4 +15,6 @@ The solutions are written by Ramin Halviatti and kept in this repository for my 
 Each directory corresponds to my solution for the given assignment, and contains the files submitted 
 to the Coursera grader for this course.
 
-I will provide additional information and README files for each directory.
+Additional information and README files for each directory will be provided. Currently test data files are not
+included in any of the directories. I will provide the necessary test_data files with instructions on 
+how to run each assignment in the README files for each directory. 
