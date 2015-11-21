@@ -143,12 +143,41 @@ public class SeamCarver {
     public   int[] findHorizontalSeam() {
 
     }
-
+*/
     // sequence of indices for vertical seam
     public   int[] findVerticalSeam() {
+        int[] seam = new int[height()];
+        // Find minimum
+        double min = 1001.0;
+        int minCol = -1;
+        for (int col = 1; col < width() - 1; col++) {
+            if (energyArray[col][1] < min) {
+                min = energyArray[col][1];
+                minCol = col;
+            }
+        }
+        StdOut.printf("Min is 1000.0, index: (%d, 0)\n", minCol);
+        StdOut.printf("Min is %f, index: (%d, 1)\n", min, minCol);
+        seam[0] = seam[1] = minCol;
 
+        for (int row = 2; row < height() - 1; row++) { 
+            min = 1001.0;
+            int minIndex = -1;
+            for (int i = 1; i >= -1; i--) {
+                if (energyArray[minCol + i][row] < min) {
+                    minIndex = minCol + i;
+                    min = energyArray[minIndex][row];
+                }
+            }
+            minCol = minIndex;
+            StdOut.printf("Min is %f, index: (%d, %d)\n", min, minCol, row);
+            seam[row] = minCol;
+        }
+        StdOut.printf("Min is 1000.0, index: (%d, %d)\n", minCol, height()-1);
+        seam[height()-1] = minCol;
+        return seam;
     }   
-*/
+
     // remove horizontal seam from current picture
     public    void removeHorizontalSeam(int[] seam) {
 
@@ -202,5 +231,10 @@ public class SeamCarver {
         // Now use the new picture to validate energy calculation again
         sc = new SeamCarver(newPicture);
         validateEnergy(sc);   
+        int[] vSeam = sc.findVerticalSeam();
+        for (int i : vSeam)
+            StdOut.printf("%d, ", i);
+        StdOut.println();
+
     }
 }
