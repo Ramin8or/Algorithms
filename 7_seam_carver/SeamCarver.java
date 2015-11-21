@@ -29,9 +29,12 @@ import edu.princeton.cs.algs4.Picture;
 import edu.princeton.cs.algs4.StdOut;
 
 public class SeamCarver {
-    private int[][] pixelArray;
-    private int H;
-    private int W;
+    private int[][] pixelArray; // Internal representation of a picture 
+                                // where Alpha, Red, Green and Blue color
+                                // values are packed in an integer for each pixel
+    private int H;              // Height of picture
+    private int W;              // Width of picture
+    private double[][] energyArray; // Calculated energy values for each pixel in pixelArray
 
     /**
      * create a seam carver object based on the given picture.
@@ -41,11 +44,16 @@ public class SeamCarver {
         // Set width and height
         W = picture.width();
         H = picture.height();
-        // Create a pixel array based on the picture
+        // Create a pixel array based on the picture ARGB values
         pixelArray = new int[W][H];
         for (int col = 0; col < W; col++)
-            for (int row = 0; row < H; row++)
+            for (int row = 0; row < H; row++) 
                 pixelArray[col][row] = picture.get(col, row).getRGB();
+        // Calculate energy values for each pixel
+        energyArray = new double[W][H];
+        for (int col = 0; col < W; col++)
+            for (int row = 0; row < H; row++) 
+                energyArray[col][row] = calculateEnergy(col, row);
     }
 
      /**
@@ -84,13 +92,22 @@ public class SeamCarver {
             throw new IndexOutOfBoundsException(
                 "x or y is outside its prescribed range.");
 
+        return energyArray[x][y];
+    }
+
+     /**
+     * Calculate energy for a passed in (x,y)
+     * @param int x is the column
+     * @param int y is the row
+     */
+    private double calculateEnergy(int x, int y) {
         if (x == 0 || y == 0 || x == (width()-1) || y == (height()-1)) {
             // Border pixels get energy of 1000 by default
             return 1000.0;
         } 
         // Energy is square root of gradiant squared for x and y
         return Math.sqrt(
-            gradiantSquare(x, y, true) + gradiantSquare(x, y, false));
+            gradiantSquare(x, y, true) + gradiantSquare(x, y, false));        
     }
 
      /**
