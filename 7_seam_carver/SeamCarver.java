@@ -29,7 +29,7 @@ import edu.princeton.cs.algs4.Picture;
 import edu.princeton.cs.algs4.StdOut;
 
 public class SeamCarver {
-    private Picture picture;
+    private int[][] pixelArray;
     private int H;
     private int W;
 
@@ -38,18 +38,28 @@ public class SeamCarver {
      * @param picture the picture
      */
     public SeamCarver(Picture picture) {
-        this.picture = picture;
-        W = this.picture.width();
-        H = this.picture.height();
+        // Set width and height
+        W = picture.width();
+        H = picture.height();
+        // Create a pixel array based on the picture
+        pixelArray = new int[W][H];
+        for (int col = 0; col < W; col++)
+            for (int row = 0; row < H; row++)
+                pixelArray[col][row] = picture.get(col, row).getRGB();
     }
 
      /**
      * Return a Picture instance given the internal 2d array of colors
      */
     public Picture picture() {
-        return this.picture;
+        Picture picture = new Picture(W, H);
+        for (int col = 0; col < W; col++)
+            for (int row = 0; row < H; row++) {
+                Color color = new Color(pixelArray[col][row], true);
+                picture.set(col, row, color);
+            }
+        return picture;
     }
-
      /**
      * Return width of internal picture.
      */
@@ -90,23 +100,27 @@ public class SeamCarver {
      * @param boolean forX denotes if the calcution is for x (or y if false)
      */
     private int gradiantSquare(int x, int y, boolean forX) {
-        Color pixelBefore;
-        Color pixelAfter;
+        int pixelBefore;
+        int pixelAfter;
         if (forX) {
             assert( x > 0 && x < width() );
-            pixelBefore = picture.get(x - 1, y);
-            pixelAfter  = picture.get(x + 1, y);
+            pixelBefore = pixelArray[x - 1][y];
+            pixelAfter  = pixelArray[x + 1][y];
         }
         else {
             assert( y > 0 && y < height() );
-            pixelBefore = picture.get(x, y - 1);
-            pixelAfter  = picture.get(x, y + 1);
+            pixelBefore = pixelArray[x][y - 1];
+            pixelAfter  = pixelArray[x][y + 1];
         }
-        int redDiff = pixelAfter.getRed() - pixelBefore.getRed();
-        int greenDiff = pixelAfter.getGreen() - pixelBefore.getGreen();
-        int blueDiff = pixelAfter.getBlue() - pixelBefore.getBlue();
+        int redDiff = ((pixelAfter  & 0x00FF0000) >> 16) - 
+                      ((pixelBefore & 0x00FF0000) >> 16);
+        int greenDiff = ((pixelAfter  & 0x0000FF00) >> 8) -
+                        ((pixelBefore & 0x0000FF00) >> 8);
+        int blueDiff = (pixelAfter & 0x000000FF) - 
+                       (pixelBefore & 0x000000FF);
         return (redDiff*redDiff + greenDiff*greenDiff + blueDiff*blueDiff);
     }
+
 /*
     // sequence of indices for horizontal seam
     public   int[] findHorizontalSeam() {
@@ -128,25 +142,25 @@ public class SeamCarver {
 
     } 
 
-    // Unit tests
-    public static void main(String[] args) {
-    double[][] energyData = {
-        {1000.00, 1000.00, 1000.00, 1000.00, 1000.00, 1000.00}, 
-        {1000.00, 237.35, 151.02, 234.09, 107.89, 1000.00}, 
-        {1000.00, 138.69, 228.10, 133.07, 211.51, 1000.00}, 
-        {1000.00, 153.88, 174.01, 284.01, 194.50, 1000.00}, 
-        {1000.00, 1000.00, 1000.00, 1000.00, 1000.00, 1000.00},
-        }; 
-        Picture picture = new Picture("test_data/6x5.png");
-        SeamCarver sc = new SeamCarver(picture);
-        
-        StdOut.printf("Validating energy calculated for each pixel.\n");        
+    private static void validateEnergy(SeamCarver sc) {
+        // Expected energy results for test_data/6x5.png
+        double[][] energyData = {
+            {1000.00, 1000.00, 1000.00, 1000.00, 1000.00, 1000.00}, 
+            {1000.00, 237.35, 151.02, 234.09, 107.89, 1000.00}, 
+            {1000.00, 138.69, 228.10, 133.07, 211.51, 1000.00}, 
+            {1000.00, 153.88, 174.01, 284.01, 194.50, 1000.00}, 
+            {1000.00, 1000.00, 1000.00, 1000.00, 1000.00, 1000.00},
+        };
+
+        StdOut.printf(
+            "Validating pixel energy calculated for test_data/6x5.png.\n");        
         for (int j = 0; j < sc.height(); j++) {
             for (int i = 0; i < sc.width(); i++) {
                 // Round off energy values to 2 decimal points
                 double energy = Math.round(sc.energy(i, j) * 100);
                 energy = energy / 100;
                 if (energy != energyData[j][i]) {
+                    // Print out info to track down the problem
                     StdOut.printf("For pixel (%d, %d) ", i, j);
                     StdOut.printf("expected energy value %f got %f\n", 
                         energyData[j][i], energy);
@@ -157,5 +171,19 @@ public class SeamCarver {
             }
             StdOut.println();
         }
+    }
+
+    // Unit tests
+    public static void main(String[] args) {
+        Picture picture = new Picture("test_data/6x5.png");
+        SeamCarver sc = new SeamCarver(picture);
+        validateEnergy(sc);   
+        
+        // Save picture
+        Picture newPicture = sc.picture();
+
+        // Now use the new picture to validate energy calculation again
+        sc = new SeamCarver(newPicture);
+        validateEnergy(sc);   
     }
 }
