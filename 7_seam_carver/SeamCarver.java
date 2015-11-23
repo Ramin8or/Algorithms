@@ -29,12 +29,12 @@ import edu.princeton.cs.algs4.Picture;
 import edu.princeton.cs.algs4.StdOut;
 
 public class SeamCarver {   
-    private int[][] pixels; // Alpha and RGB values packed in integers
-    private int H;          // Height of picture
-    private int W;          // Width of picture
     private static final double MAX_ENERGY  = 1000.00;
     private static final boolean HORIZONTAL = true;
     private static final boolean VERTICAL   = false;
+    private int[][] pixels; // Alpha and RGB values packed in integers
+    private int H;          // Height of picture
+    private int W;          // Width of picture
 
     /**
      * create a seam carver object based on the given picture.
@@ -118,46 +118,51 @@ public class SeamCarver {
     }
 
      /**
-     * Helper function that does finds a seam depending on the passed in energyArray
+     * Helper function that finds a seam depending on the passed in energyArray
      */
     private int[] findSeam(double[][] energyArray) {
-        int W = energyArray.length;
-        int H = energyArray[0].length;
-        double[][] distTo = new double[W][H];
-        for (int x = 0; x < W; x++) {            
-            for (int y = 0; y < H; y++) 
-                if (y == 0) distTo[x][y] = MAX_ENERGY;
-                else distTo[x][y] = Double.POSITIVE_INFINITY;
+        int width  = energyArray.length;
+        int height = energyArray[0].length;
+        double[][] distTo = new double[width][height];
+        int[] seam = new int[height];
+        int[][] edgeTo = new int[width][height];
+
+        // Initialize distTo
+        for (int x = 0; x < width; x++) {           
+            for (int y = 0; y < height; y++) { 
+                if (y == 0) 
+                    distTo[x][y] = MAX_ENERGY;
+                else 
+                    distTo[x][y] = Double.POSITIVE_INFINITY;
             }        
-        
-        int[] seam = new int[H];
-        int[][] edgeTo = new int[W][H];
-        
+        }
+                
         // Populate distTo while relaxing edges
-        for (int y = 0; y < H - 1; y++) 
-            for (int x = 0; x < W; x++) 
+        // TODO describe the algorithm here
+        for (int y = 0; y < height - 1; y++) 
+            for (int x = 0; x < width; x++) 
                 for (int k = x-1; k <= x+1; k++) 
-                    if (k >= 0 && k < W) 
-                        if (distTo[k][y+1] > distTo[x][y] + energyArray[k][y+1]) {
+                    if (k >= 0 && k < width &&
+                        (distTo[k][y+1] > distTo[x][y] + energyArray[k][y+1])){
                             // relax edge
                             distTo[k][y+1] = distTo[x][y] + energyArray[k][y+1];
                             edgeTo[k][y+1] = y*energyArray.length + x;
-                        }
+                    }
 
         // find minimum in last row
         double lastMin = Double.POSITIVE_INFINITY;
         int lastIndex = -1;
-        for (int x = 0; x < W; x++) {
-            if (lastMin > distTo[x][H-1]) {
-                lastMin = distTo[x][H-1];
+        for (int x = 0; x < width; x++) {
+            if (lastMin > distTo[x][height-1]) {
+                lastMin = distTo[x][height-1];
                 lastIndex = x;
             }        
         }
-        seam[H-1] = lastIndex;
+        seam[height-1] = lastIndex;
         
         // reconstruct the path from bottom up
-        for (int y = H-1; y > 0; y--)
-            seam[y-1] = edgeTo[seam[y]][y] % W;        
+        for (int y = height-1; y > 0; y--)
+            seam[y-1] = edgeTo[seam[y]][y] % width;        
         return seam;
     }
 
@@ -174,6 +179,8 @@ public class SeamCarver {
             throw new IllegalArgumentException(
                 "Invalid seam or picture size.");        
 
+        validateSeam(seam, HORIZONTAL);
+        
         int[][] pixelsCopy = new int[W][H-1];
         
         for (int col = 0; col < W; col++) {
@@ -201,6 +208,8 @@ public class SeamCarver {
             throw new IllegalArgumentException(
                 "Invalid seam or picture size.");  
 
+        validateSeam(seam, VERTICAL);
+
         int[][] pixelsCopy = new int[W-1][H];
 
         for (int x = 0; x < W; x++)
@@ -226,12 +235,12 @@ public class SeamCarver {
         int pixelBefore;
         int pixelAfter;
         if (horizontal) {
-            assert( x > 0 && x < width() );
+            assert (x > 0 && x < width());
             pixelBefore = pixels[x - 1][y];
             pixelAfter  = pixels[x + 1][y];
         }
         else {
-            assert( y > 0 && y < height() );
+            assert (y > 0 && y < height());
             pixelBefore = pixels[x][y - 1];
             pixelAfter  = pixels[x][y + 1];
         }
@@ -255,6 +264,21 @@ public class SeamCarver {
                     table[x][y] = energy(x, y);
             }
         return table;        
+    }
+
+    private void validateSeam(int[] seam, boolean horizontal) {
+        int limit;
+        if (horizontal)
+            limit = H;
+        else
+            limit = W;
+
+        for (int i = 0; i < seam.length; i++) {
+            if (seam[i] < 0 || seam[i] >= limit || 
+                (i < seam.length - 1 && Math.abs(seam[i] - seam[i+1]) > 1))
+                    throw new IllegalArgumentException(
+                            "Invalid value in seam.");
+        }
     }
 
    private static void validateEnergy(SeamCarver sc) {
