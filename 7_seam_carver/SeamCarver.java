@@ -9,8 +9,9 @@
  ******************************************************************************/
 
 /**
- *  The <tt>SeamCarver</tt> class represents a data type for ...
- *  <em>s</em>
+ *  The <tt>SeamCarver</tt> class represents a data type for content-aware resizing of
+ *  pictures in which unimportant seams are removed without squishing or cropping the
+ *  main subjects of the picture. 
  *  ...
  *  <p>
  *  This implementation uses ...
@@ -19,9 +20,8 @@
  *  It uses extra space proportional to <em>V</em>.
  *  <p>
  *  For additional documentation, 
- *  see <a href="http://algs4.cs.princeton.edu/42digraph">Section 4.2</a> of 
- *  <i>Algorithms, 4th Edition</i> by Robert Sedgewick and Kevin Wayne.
- *
+ *  see <a href="https://en.wikipedia.org/wiki/Seam_carving">seam-carving</a> as well
+ *  as the specifications for this assignment referred to on the top section of this file.
  *  @author Ramin Halviatti
  */
 import java.awt.Color;
